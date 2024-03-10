@@ -1,9 +1,29 @@
-import express from 'express';
-import dotenv from 'dotenv';
+import express, {Response, Request} from 'express';
+import {config as dotenvConfig} from 'dotenv';
+import mongoose from 'mongoose';
+import http from 'http';
+import userRouter from './routes/user.route';
 
-const env = dotenv.config();
+dotenvConfig();
+
 const app = express();
+const server = new http.Server(app);
 
-app.listen(process.env.PORT || 3000, () => {
-	console.log('Server is running on port 3000');
-});
+mongoose.set('strictQuery', false);
+
+app.use('/api/users', userRouter);
+
+async function start(PORT: string, UrlBD: string) {
+	try {
+		await mongoose.connect(UrlBD);
+		server.listen(PORT);
+		console.log(
+			`Сервер запущен: внешний порт ${PORT}, подключен к БД через порт ${UrlBD}`
+		);
+	} catch (err) {
+		console.log(err);
+	}
+}
+const UrlBD = process.env.UrlBD || 'mongodb://127.0.0.1:27017/juniors-db';
+const PORT = process.env.PORT || '3000';
+start(PORT, UrlBD);
